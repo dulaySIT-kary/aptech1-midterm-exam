@@ -1,71 +1,56 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Signup() {
-  const navigate = useNavigate();
-
-  // state
-  const [form, setForm] = useState({
-    username: "",
-    password: ""
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
   });
 
-  // onChange handler (arrow function)
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
     }));
   };
 
-  // onSubmit handler (arrow function)
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    console.log("Form Data:", form);
-
-    // redirect after signup
-    navigate("/success");
+    console.log("Signup Data:", formData);
+    // redirect to Success page after form submission
+    navigate("/success", { state: { formData } });
   };
 
   return (
     <div>
       <h1>Signup</h1>
-
       <form onSubmit={handleSubmit}>
-        {/* USERNAME */}
         <input
           type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange} // normal binding
-          required
+          name="name"
+          placeholder="Name"
+          value={formData.name}
+          onChange={handleChange}
         />
-
-        <br /><br />
-
-        {/* PASSWORD */}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+        />
         <input
           type="password"
           name="password"
           placeholder="Password"
-          value={form.password}
-          
-          // INLINE HANDLER (binding technique)
-          onChange={(e) => handleChange(e)}
-          
-          required
+          value={formData.password}
+          onChange={handleChange}
         />
-
-        <br /><br />
-
-        {/* INLINE onClick (another binding example) */}
-        <button type="submit" onClick={() => console.log("Submitting...")}>
-          Signup
-        </button>
+        <button type="submit">Signup</button>
       </form>
     </div>
   );
