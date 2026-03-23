@@ -46,7 +46,7 @@ function Signup() {
       alert("Username contains invalid characters.");
       return;
     }
-
+//Hardcoded password validation for demonstration purposes. In production, use a proper authentication system.
     if (!passwordRegex.test(password)) {
       alert(
         "Password must be 8-16 chars, include 1 uppercase, 1 number, and 1 special character."
