@@ -12,40 +12,27 @@ function Signup() {
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // ✅ Regex
   const nameRegex = /^[A-Za-z]{2,}$/;
-  const usernameRegex = /^[A-Za-z0-9._-]+$/;
   const passwordRegex = /^(?=.[A-Z])(?=.\d)(?=.*[\W_]).{8,16}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // ✅ Validate function
   const validate = (field, value) => {
-    let error = "";
-
-    if (field === "name") {
-      if (!nameRegex.test(value)) {
-        error = "Name must be at least 2 letters only.";
-      }
+    if (field === "name" && !nameRegex.test(value)) {
+      return "Name must be at least 2 letters.";
     }
-
-    if (field === "email") {
-      if (!emailRegex.test(value)) {
-        error = "Invalid email format.";
-      }
+    if (field === "email" && !emailRegex.test(value)) {
+      return "Invalid email.";
     }
-
-    if (field === "password") {
-      if (!passwordRegex.test(value)) {
-        error =
-          "8-16 chars, 1 uppercase, 1 number, 1 special character.";
-      }
+    if (field === "password" && !passwordRegex.test(value)) {
+      return "Weak password (8–16, uppercase, number, special char).";
     }
-
-    return error;
+    return "";
   };
 
-  // ✅ Handle change (real-time validation)
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -59,7 +46,6 @@ function Signup() {
     }
   };
 
-  // ✅ Handle blur (mark field as touched)
   const handleBlur = (e) => {
     const { name, value } = e.target;
 
@@ -71,56 +57,60 @@ function Signup() {
     }));
   };
 
-  // ✅ Check if form is valid
   const isFormValid =
-    Object.values(errors).every((err) => !err) &&
+    Object.values(errors).every((e) => !e) &&
     formData.name &&
     formData.email &&
     formData.password;
 
-  const handleSubmit = (e) => {
+  // ✅ Simulated API call
+  const fakeSignup = () =>
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // simulate error (10% chance)
+        if (Math.random() < 0.1) {
+          reject("Server error. Try again.");
+        } else {
+          resolve("Success");
+        }
+      }, 1200);
+    });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError("");
 
-    const username = formData.email.split("@")[0];
-
-    // Final validation check
+    // Final validation
     const newErrors = {
       name: validate("name", formData.name),
       email: validate("email", formData.email),
       password: validate("password", formData.password),
     };
 
-    if (!usernameRegex.test(username)) {
-      newErrors.email = "Invalid username from email.";
-    }
-
     setErrors(newErrors);
+    if (Object.values(newErrors).some((e) => e)) return;
 
-    if (Object.values(newErrors).some((err) => err)) return;
-
-    const user = {
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      username,
-      bio: "",
-      avatar: "",
-      role: "user",
-      createdAt: new Date().toISOString(),
-    };
+    setLoading(true);
 
     try {
+      await fakeSignup();
+
+      const user = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        username: formData.email.split("@")[0],
+        createdAt: new Date().toISOString(),
+      };
+
       localStorage.setItem("user", JSON.stringify(user));
+
+      // ✅ Redirect after success
+      navigate("/profile");
     } catch (err) {
-      console.error("Storage error:", err);
+      setSubmitError(err);
+    } finally {
+      setLoading(false);
     }
-
-    navigate("/profile");
-  };
-
-  // ✅ Helper for styling
-  const getInputClass = (field) => {
-    if (!touched[field]) return "";
-    return errors[field] ? "input-error" : "input-success";
   };
 
   return (
@@ -128,7 +118,6 @@ function Signup() {
       <h1>Signup</h1>
 
       <form onSubmit={handleSubmit} noValidate>
-        {/* Name */}
         <input
           type="text"
           name="name"
@@ -136,13 +125,9 @@ function Signup() {
           value={formData.name}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={getInputClass("name")}
         />
-        {touched.name && errors.name && (
-          <p className="error">{errors.name}</p>
-        )}
+        {touched.name && errors.name && <p className="error">{errors.name}</p>}
 
-        {/* Email */}
         <input
           type="email"
           name="email"
@@ -150,13 +135,9 @@ function Signup() {
           value={formData.email}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={getInputClass("email")}
         />
-        {touched.email && errors.email && (
-          <p className="error">{errors.email}</p>
-        )}
+        {touched.email && errors.email && <p className="error">{errors.email}</p>}
 
-        {/* Password */}
         <input
           type="password"
           name="password"
@@ -164,21 +145,18 @@ function Signup() {
           value={formData.password}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={getInputClass("password")}
         />
         {touched.password && errors.password && (
           <p className="error">{errors.password}</p>
         )}
 
-        <button type="submit" disabled={!isFormValid}>
-          Signup
+        {/* ✅ Submit error */}
+        {submitError && <p className="error">{submitError}</p>}
+
+        <button type="submit" disabled={!isFormValid || loading}>
+          {loading ? "Signing up..." : "Signup"}
         </button>
       </form>
-
-      {/* ✅ UX hint */}
-      <small>
-        Password must have uppercase, number, special character (8–16 chars).
-      </small>
     </div>
   );
 }
